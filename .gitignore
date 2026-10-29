@@ -1,0 +1,38 @@
+# Binaries and executables
+*.exe
+cli-proxy-api
+bin/
+
+# Environment and secrets
+.env
+*.env
+secrets.env
+*.key
+*.pem
+
+# Authentication data and credentials
+auths/*
+!auths/.gitkeep
+auth/*
+!auth/.gitkeep
+
+# Logs
+*.log
+logs/
+
+# Build artifacts
+dist/
+dist-ssr/
+*.tsbuildinfo
+temp/
+tmp/
+
+# Dependencies
+node_modules/
+
+# Editor and OS files
+.DS_Store
+.idea/
+.vscode/
+*.swp
+.scratch/
