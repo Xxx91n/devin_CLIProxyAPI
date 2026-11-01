@@ -1,21 +1,23 @@
-# Host Callback Auth Files Plugin
+# Host callback auth files plugin
 
-This Go-only plugin demonstrates how a plugin-owned browser resource can call the host auth file callbacks:
+[English](README.md) | [简体中文](README_CN.md)
+
+A Go-only example plugin whose Management API page calls the host auth file callbacks:
 
 - `host.auth.list`
 - `host.auth.get`
 - `host.auth.get_runtime`
 - `host.auth.save`
 
-## Purpose and Scope
+## Purpose and scope
 
-The plugin registers a Management API resource named `Host Auth Files` at `/status`. CPA exposes it under:
+The plugin registers a Management API resource named `Host Auth Files` at `/status`, exposed under:
 
 ```text
 /v0/resource/plugins/host-callback-auth-files/status
 ```
 
-The resource reads URL query parameters, calls the host auth callbacks, and renders the result in HTML. It does not implement executor, translator, auth provider, or scheduler capabilities.
+The page reads URL query parameters, calls the host auth callbacks, and renders the result as HTML. It registers no executor, translator, auth provider, or scheduler capability.
 
 ## Build
 
@@ -24,18 +26,17 @@ From this directory:
 ```bash
 cd go
 go build -buildmode=c-shared -o host-callback-auth-files.dylib .
-rm -f host-callback-auth-files.dylib host-callback-auth-files.h
+rm -f host-callback-auth-files.h
+# Copy into your configured plugins.dir. The path below targets the default
+# "plugins" directory when the server runs from the CLIProxyAPI root.
+cp host-callback-auth-files.dylib ../../../../plugins/
 ```
 
-Use the platform extension expected by your target system:
-
-- `.dylib` on macOS
-- `.so` on Linux
-- `.dll` on Windows
+Use the extension your target system expects: `.dylib` on macOS, `.so` on Linux, `.dll` on Windows.
 
 ## Configuration
 
-Build the dynamic library and place it under the configured plugin directory with a basename that matches the plugin ID. For example, `plugins/host-callback-auth-files.dylib` maps to `plugins.configs.host-callback-auth-files`.
+The library goes into the configured plugin directory (`plugins.dir`, default `plugins`) with a basename matching the plugin ID: `plugins/host-callback-auth-files.dylib` maps to `plugins.configs.host-callback-auth-files`.
 
 ```yaml
 plugins:
@@ -47,9 +48,9 @@ plugins:
       priority: 1
 ```
 
-This plugin does not define plugin-specific configuration fields.
+The plugin defines no configuration fields of its own.
 
-## Resource URL Examples
+## Resource URL examples
 
 List all auth files:
 
@@ -77,10 +78,14 @@ http://localhost:8080/v0/resource/plugins/host-callback-auth-files/status?op=sav
 
 ## Parameters
 
-- `op`: one of `list`, `get`, `runtime`, `save`. Default is `list`.
-- `auth_index`: required for `get` and `runtime`.
-- `name`: required for `save`. Must end with `.json`.
-- `json`: required for `save`. Must be valid JSON.
+| Parameter | Description |
+| --- | --- |
+| `op` | One of `list` (default), `get`, `runtime` (alias `get_runtime`), `save`. |
+| `auth_index` | Required for `get` and `runtime`. |
+| `name` | Required for `save`. Must end with `.json`. |
+| `json` | Required for `save`. Must be valid JSON. |
+
+Ops other than `list`, `get`, `runtime`, and `save` are not supported; the page reports an error for them.
 
 ## Notes
 

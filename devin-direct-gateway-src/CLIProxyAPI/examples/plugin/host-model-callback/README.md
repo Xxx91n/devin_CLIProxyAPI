@@ -1,21 +1,23 @@
-# Host Model Callback Plugin
+# Host model callback plugin
 
-This Go-only plugin demonstrates how a plugin-owned browser resource can call the host model execution callbacks instead of sending any external HTTP request itself.
+[English](README.md) | [简体中文](README_CN.md)
 
-## Purpose and Scope
+A Go-only example plugin whose Management API page runs model execution through the host model callbacks. The plugin sends no outbound HTTP requests itself.
 
-The plugin registers a Management API resource named `Host Model Callback` at `/status`. CPA exposes it under:
+## Purpose and scope
+
+The plugin registers a Management API resource named `Host Model Callback` at `/status`, exposed under:
 
 ```text
 /v0/resource/plugins/host-model-callback/status
 ```
 
-The resource examples are query-based. The resource reads URL query parameters, builds an OpenAI-compatible chat request, and calls:
+The page is query-driven: it reads URL query parameters, builds an OpenAI-compatible chat request, and calls:
 
-- `host.model.execute` for non-streaming model execution.
+- `host.model.execute` for non-streaming execution.
 - `host.model.execute_stream`, `host.model.stream_read`, and `host.model.stream_close` for streaming execution.
 
-This example is intentionally limited to host model callbacks. It does not implement an executor, translator, normalizer, auth provider, scheduler, or any direct outbound HTTP client.
+The example demonstrates host model callbacks only. It registers no executor, translator, normalizer, auth provider, or scheduler capability, and it contains no outbound HTTP client.
 
 ## Build
 
@@ -24,18 +26,17 @@ From this directory:
 ```bash
 cd go
 go build -buildmode=c-shared -o host-model-callback.dylib .
-rm -f host-model-callback.dylib host-model-callback.h
+rm -f host-model-callback.h
+# Copy into your configured plugins.dir. The path below targets the default
+# "plugins" directory when the server runs from the CLIProxyAPI root.
+cp host-model-callback.dylib ../../../../plugins/
 ```
 
-Use the platform extension expected by your target system:
-
-- `.dylib` on macOS
-- `.so` on Linux
-- `.dll` on Windows
+Use the extension your target system expects: `.dylib` on macOS, `.so` on Linux, `.dll` on Windows.
 
 ## Configuration
 
-Build the dynamic library and place it under the configured plugin directory with a basename that matches the plugin ID. For example, `plugins/host-model-callback.dylib` maps to `plugins.configs.host-model-callback`.
+The library goes into the configured plugin directory (`plugins.dir`, default `plugins`) with a basename matching the plugin ID: `plugins/host-model-callback.dylib` maps to `plugins.configs.host-model-callback`.
 
 ```yaml
 plugins:
@@ -47,46 +48,49 @@ plugins:
       priority: 1
 ```
 
-This plugin does not define plugin-specific configuration fields.
+The plugin defines no configuration fields of its own.
 
-## Resource URL Examples
+## Resource URL examples
 
-Non-streaming request with defaults:
+Non-streaming, all defaults:
 
 ```text
 http://localhost:8080/v0/resource/plugins/host-model-callback/status
 ```
 
-Non-streaming request with explicit protocol and prompt:
+Non-streaming with explicit protocol and prompt:
 
 ```text
 http://localhost:8080/v0/resource/plugins/host-model-callback/status?entry_protocol=openai&exit_protocol=openai&model=gpt-5.5&prompt=Say%20hello%20in%20one%20sentence
 ```
 
-Streaming request with explicit close:
+Streaming with explicit close:
 
 ```text
 http://localhost:8080/v0/resource/plugins/host-model-callback/status?stream=true&model=gpt-5.5&prompt=Write%20three%20short%20tokens
 ```
 
-Streaming request that relies on RPC-scope implicit close:
+Streaming with RPC-scope implicit close:
 
 ```text
 http://localhost:8080/v0/resource/plugins/host-model-callback/status?stream=true&implicit_close=true
 ```
 
-The default model ID is `gpt-5.5` to match the current nearby Codex example documentation and code. It is only an example model identifier; the request succeeds only when your CPA configuration can route that model.
+The default model ID is `gpt-5.5`, matching the nearby `codex-service-tier` example. It is only an example identifier; the request succeeds only when your CPA configuration can route that model.
 
 ## Parameters
 
-- `entry_protocol`: inbound client protocol passed to the host model execution path. The default is `openai`.
-- `exit_protocol`: target provider protocol passed to the host model execution path. The default is `openai`.
-- `model`: model identifier passed in the host model execution request. The default is `gpt-5.5`; availability depends on the configured model registry and auth records.
-- `stream`: boolean flag. The default is `false`; set `stream=true` to use `host.model.execute_stream`.
-- `prompt`: text used to build the default OpenAI-compatible request body.
-- `body`: optional JSON string in the URL query used as the raw model request body. When `body` is provided, it replaces the generated body.
-- `alt`: optional alternate route or mode suffix passed through the host model request.
-- `implicit_close`: streaming-only boolean flag. The default is `false`.
+| Parameter | Description |
+| --- | --- |
+| `entry_protocol` | Inbound client protocol passed to the host execution path. Default `openai`. |
+| `exit_protocol` | Target provider protocol passed to the host execution path. Default `openai`. |
+| `model` | Model identifier. Default `gpt-5.5`; availability depends on the configured model registry and auth records. |
+| `stream` | Boolean, default `false`. `stream=true` uses `host.model.execute_stream`. |
+| `mode` | Optional shorthand for `stream`: accepts `stream`, `streaming`, `non-stream`, `non_stream`, `nonstream`, or `sync`. |
+| `prompt` | Text used to build the default OpenAI-compatible request body. |
+| `body` | Optional JSON string in the URL query; replaces the generated body. |
+| `alt` | Optional alternate route or mode suffix passed through the host model request. |
+| `implicit_close` | Streaming-only boolean, default `false`. |
 
 The generated default body is OpenAI-compatible:
 
@@ -103,36 +107,31 @@ The generated default body is OpenAI-compatible:
 }
 ```
 
-For example, a URL-encoded `body` query value can provide the raw OpenAI-compatible request:
+A URL-encoded `body` query value can provide the raw OpenAI-compatible request instead:
 
 ```text
 http://localhost:8080/v0/resource/plugins/host-model-callback/status?body=%7B%22model%22%3A%22gpt-5.5%22%2C%22stream%22%3Afalse%2C%22messages%22%3A%5B%7B%22role%22%3A%22user%22%2C%22content%22%3A%22Say%20hello%20in%20one%20sentence%22%7D%5D%7D
 ```
 
-## Stream Close Semantics
+## Stream close semantics
 
-By default, streaming mode explicitly closes the host-owned stream with `host.model.stream_close` through a deferred close call. This is the preferred pattern for plugins because it releases stream resources as soon as the plugin has finished reading.
+By default, streaming mode closes the host-owned stream with `host.model.stream_close` in a deferred call. This is the pattern normal plugins should follow because it releases stream resources as soon as the plugin finishes reading.
 
-When `implicit_close=true` is set, the plugin intentionally skips the explicit close call. CPA injects `host_callback_id` into the `management.handle` request, and this example forwards that callback ID to `host.model.execute_stream` so the host can close the stream when the `management.handle` RPC callback scope returns. This mode exists only to demonstrate host cleanup behavior; normal plugin code should explicitly close streams it opens.
+With `implicit_close=true`, the plugin skips the explicit close call. The host injects `host_callback_id` into the `management.handle` request, and the plugin forwards that ID to `host.model.execute_stream`, so the host closes the stream when the `management.handle` RPC callback scope returns. This mode exists to demonstrate host cleanup behavior; plugin code that opens streams should close them explicitly.
 
-## Recursion Guard
+## Recursion guard
 
-This example forwards the `host_callback_id` received from `management.handle` when it calls `host.model.execute` or `host.model.execute_stream`. CPA uses that callback scope to identify the plugin that initiated the host model callback and skips that same plugin's request, response, and stream interceptors for the nested model execution.
+The plugin forwards the `host_callback_id` it received from `management.handle` on every `host.model.execute` and `host.model.execute_stream` call. The host uses that ID to identify the plugin that initiated the callback and skips that plugin's request, response, and stream interceptors for the nested execution. The nested request therefore cannot recurse into this plugin, though other enabled plugins can still intercept it.
 
-Host model callbacks are therefore not recursive for the caller. Other enabled plugins can still intercept the nested request.
+## Usage reporting
 
-## Billing and Usage
+The callback runs through the same model executor path as normal proxied requests, so usage collection, request accounting, and billing metadata are handled by that shared path. The callback layer adds no usage record of its own.
 
-The callback uses the existing CPA model executor path. Usage collection, request accounting, and billing metadata are handled by the same executor and usage reporter path as normal proxied requests. The callback layer does not bill twice and does not create an additional usage record by itself.
-
-## Error Handling and Troubleshooting
+## Error handling and troubleshooting
 
 The page displays the model status, response headers, body, stream chunks, close mode, and any callback error returned by the host envelope.
 
-Common issues:
-
 - `host model executor is unavailable`: the host model executor path is not initialized for this plugin callback context.
-- `unsupported model` or provider-specific routing errors: the `model` value is not routable with the current CPA model/auth configuration.
-- `host.model.execute requires stream=false`: non-stream execution was called with a streaming request.
-- `host.model.execute_stream requires stream=true`: streaming execution was called without `stream=true`.
-- Empty or partial stream output: inspect the page error section and host logs; upstream stream errors are returned through `host.model.stream_read`.
+- `unsupported model` or provider-specific routing errors: the `model` value is not routable under the current CPA model/auth configuration.
+- `host.model.execute requires stream=false` / `host.model.execute_stream requires stream=true`: the `stream` flag did not match the callback used.
+- Empty or partial stream output: check the page error section and host logs; upstream stream errors arrive through `host.model.stream_read`.

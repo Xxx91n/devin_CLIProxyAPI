@@ -8,7 +8,7 @@ from typing import NamedTuple
 
 ROOT = Path(__file__).resolve().parents[1]
 ABI_VERSION = 1
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 6
 
 
 class Capability(NamedTuple):
@@ -162,7 +162,7 @@ def result_for_method(cap: Capability, lang: str, method: str) -> str:
     if method == "command_line.execute":
         return f'{{"Stdout":{json.dumps(base64_json(pid + " command executed\\n"))},"ExitCode":0}}'
     if method == "management.register":
-        return f'{{"routes":[{{"Method":"GET","Path":"/plugins/{pid}/status","Menu":{json.dumps(cap.title)},"Description":{json.dumps(cap.description_en)}}}]}}'
+        return f'{{"routes":[{{"Method":"GET","Path":"/plugins/{pid}/status","Description":{json.dumps(cap.description_en)}}}]}}'
     if method == "management.handle":
         return compact_json({"StatusCode": 200, "Headers": {"content-type": ["application/json"]}, "Body": base64_json({"plugin": pid})})
     raise ValueError(f"unsupported method {method}")

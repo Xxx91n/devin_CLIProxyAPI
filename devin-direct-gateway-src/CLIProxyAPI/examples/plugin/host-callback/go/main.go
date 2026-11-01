@@ -57,6 +57,7 @@ import "C"
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"time"
 	"unsafe"
@@ -71,8 +72,9 @@ type envelope struct {
 }
 
 type envelopeError struct {
-	Code    string `json:"code"`
-	Message string `json:"message"`
+	Code       string `json:"code"`
+	Message    string `json:"message"`
+	HTTPStatus int    `json:"http_status,omitempty"`
 }
 
 func main() {}
@@ -102,7 +104,13 @@ func cliproxyPluginCall(method *C.char, request *C.uint8_t, requestLen C.size_t,
 	}
 	raw, errHandle := handleMethod(C.GoString(method))
 	if errHandle != nil {
-		writeResponse(response, errorEnvelope("plugin_error", errHandle.Error()))
+		status := 0
+		type statusCoder interface{ StatusCode() int }
+		var sc statusCoder
+		if errors.As(errHandle, &sc) && sc != nil {
+			status = sc.StatusCode()
+		}
+		writeResponse(response, errorEnvelope("plugin_error", errHandle.Error(), status))
 		return 1
 	}
 	writeResponse(response, raw)
@@ -127,15 +135,15 @@ func handleMethod(method string) ([]byte, error) {
 	_ = time.Second
 	switch method {
 	case "plugin.register":
-		return okEnvelopeJSON("{\"schema_version\":1,\"metadata\":{\"Name\":\"example-host-callback-go\",\"Version\":\"0.1.0\",\"Author\":\"router-for-me\",\"GitHubRepository\":\"https://github.com/router-for-me/CLIProxyAPI\",\"Logo\":\"https://example.invalid/example-host-callback-go.png\",\"ConfigFields\":[]},\"capabilities\":{\"management_api\":true}}")
+		return okEnvelopeJSON("{\"schema_version\":6,\"metadata\":{\"Name\":\"example-host-callback-go\",\"Version\":\"0.1.0\",\"Author\":\"router-for-me\",\"GitHubRepository\":\"https://github.com/router-for-me/CLIProxyAPI\",\"Logo\":\"https://example.invalid/example-host-callback-go.png\",\"ConfigFields\":[]},\"capabilities\":{\"management_api\":true}}")
 	case "plugin.reconfigure":
-		return okEnvelopeJSON("{\"schema_version\":1,\"metadata\":{\"Name\":\"example-host-callback-go\",\"Version\":\"0.1.0\",\"Author\":\"router-for-me\",\"GitHubRepository\":\"https://github.com/router-for-me/CLIProxyAPI\",\"Logo\":\"https://example.invalid/example-host-callback-go.png\",\"ConfigFields\":[]},\"capabilities\":{\"management_api\":true}}")
+		return okEnvelopeJSON("{\"schema_version\":6,\"metadata\":{\"Name\":\"example-host-callback-go\",\"Version\":\"0.1.0\",\"Author\":\"router-for-me\",\"GitHubRepository\":\"https://github.com/router-for-me/CLIProxyAPI\",\"Logo\":\"https://example.invalid/example-host-callback-go.png\",\"ConfigFields\":[]},\"capabilities\":{\"management_api\":true}}")
 	case "management.register":
-		return okEnvelopeJSON("{\"resources\":[{\"Path\":\"/status\",\"Menu\":\"Host Callback\",\"Description\":\"CPA exposes this menu resource under /v0/resource/plugins/example-host-callback-go/status.\"}]}")
+		return okEnvelopeJSON("{\"routes\":[{\"Method\":\"GET\",\"Path\":\"/plugins/example-host-callback-go/status\",\"Description\":\"Host callback example carried by a minimal Management API route.\"}]}")
 	case "management.handle":
 		callHost("host.log", []byte(`{"level":"info","message":"example-host-callback-go host callback log","fields":{"plugin":"example-host-callback-go"}}`))
 		callHost("host.http.do", []byte(`{"method":"GET","url":"https://example.com","headers":{"user-agent":["example-host-callback-go"]}}`))
-		return okEnvelopeJSON("{\"StatusCode\":200,\"Headers\":{\"content-type\":[\"text/html; charset=utf-8\"]},\"Body\":\"PCFkb2N0eXBlIGh0bWw+PHRpdGxlPkhvc3QgQ2FsbGJhY2s8L3RpdGxlPjxtYWluPkhvc3QgQ2FsbGJhY2sgcmVzb3VyY2U8L21haW4+\"}")
+		return okEnvelopeJSON("{\"StatusCode\":200,\"Headers\":{\"content-type\":[\"application/json\"]},\"Body\":\"eyJwbHVnaW4iOiJleGFtcGxlLWhvc3QtY2FsbGJhY2stZ28ifQ==\"}")
 	default:
 		return errorEnvelope("unknown_method", "unknown method: "+method), nil
 	}
@@ -145,8 +153,12 @@ func okEnvelopeJSON(result string) ([]byte, error) {
 	return json.Marshal(envelope{OK: true, Result: json.RawMessage(result)})
 }
 
-func errorEnvelope(code, message string) []byte {
-	raw, _ := json.Marshal(envelope{OK: false, Error: &envelopeError{Code: code, Message: message}})
+func errorEnvelope(code, message string, httpStatus ...int) []byte {
+	status := 0
+	if len(httpStatus) > 0 {
+		status = httpStatus[0]
+	}
+	raw, _ := json.Marshal(envelope{OK: false, Error: &envelopeError{Code: code, Message: message, HTTPStatus: status}})
 	return raw
 }
 

@@ -1,33 +1,75 @@
-# Standard Dynamic Library Plugin Examples
+# CLIProxyAPI plugin examples
 
-This directory contains standard dynamic library plugin examples for the CLIProxyAPI C ABI.
+[English](README.md) | [简体中文](README_CN.md)
 
-## Layout
+This directory holds the example plugins for the CLIProxyAPI native plugin system. A plugin is a dynamic library the host loads from the configured plugin directory. The host calls the library's `cliproxy_plugin_init` export, and after that the two sides exchange JSON envelopes through a fixed C function table (`internal/pluginhost/loader_unix.go`, `internal/pluginhost/loader_windows.go`). The current ABI version is 1 and the RPC schema version is 6, both defined in `sdk/pluginabi/types.go`.
 
-- `simple/`: full provider-native skeleton that declares every supported capability.
-- `model/`: model capability only.
-- `auth/`: auth provider capability only.
-- `frontend-auth/`: frontend auth provider capability only.
-- `frontend-auth-exclusive/`: frontend auth provider that becomes the only request authentication provider when selected.
-- `executor/`: executor capability only.
-- `protocol-format/`: minimal executor focused on input/output format declarations.
-- `request-translator/`: request translation capability only.
-- `request-normalizer/`: request normalization capability only.
-- `codex-service-tier/`: Go-only request normalizer that sets Codex `gpt-5.5` requests to the priority service tier when enabled.
-- `request-lifecycle/`: Go-only request admission example with concurrency control, active HTTP termination, and terminal callbacks.
-- `scheduler/`: Go-only scheduler that can select a configured auth ID, delegate to a built-in scheduler, or deny picks.
-- `claude-web-search-router/`: ModelRouter + executor for Claude Code built-in `web_search` (antigravity / codex / xai / Tavily). See `claude-web-search-router/README.md`.
-- `response-translator/`: response translation capability only.
-- `response-normalizer/`: response normalization capability only.
-- `thinking/`: thinking applier capability only.
-- `usage/`: usage observer capability only.
-- `cli/`: command-line capability only.
-- `management-api/`: Management API and resource capability only.
-- `host-callback/`: minimal plugin resource that demonstrates host callbacks.
-- `host-callback-auth-files/`: Go-only plugin resource that calls host auth file callbacks.
-- `host-model-callback/`: Go-only plugin resource that calls the host model execution callbacks.
+Plugin loading needs cgo on Unix platforms (Linux, macOS, FreeBSD) and works through `LoadLibrary` on Windows. A binary built without cgo on Unix fails with "standard dynamic library plugin loading requires cgo on this platform" (`internal/pluginhost/loader_unsupported.go`).
 
-Most standard capability examples contain `go/`, `c/`, and `rust/` subdirectories. Specialized examples may provide only the implementation language they need.
+## Examples
+
+| Directory | Languages | What it shows |
+|---|---|---|
+| [`simple`](simple/README.md) | Go, C, Rust | Full mixed-capability skeleton; the reference for the current ABI. |
+| [`model`](model/go/main.go) | Go, C, Rust | Model capability only: static models and auth-bound models. |
+| [`auth`](auth/go/main.go) | Go, C, Rust | Auth provider capability only: parse, login, poll, refresh. |
+| [`frontend-auth`](frontend-auth/go/main.go) | Go, C, Rust | Frontend auth provider capability only. |
+| [`frontend-auth-exclusive`](frontend-auth-exclusive/README.md) | Go only | Frontend auth provider that becomes the only request authentication provider when selected. |
+| [`executor`](executor/go/main.go) | Go, C, Rust | Executor capability only: execute, streaming, count tokens, HTTP requests. |
+| [`protocol-format`](protocol-format/go/main.go) | Go, C, Rust | Minimal executor focused on input and output format declarations. |
+| [`request-translator`](request-translator/go/main.go) | Go, C, Rust | Request translation capability only. |
+| [`request-normalizer`](request-normalizer/go/main.go) | Go, C, Rust | Request normalization capability only. |
+| [`response-translator`](response-translator/go/main.go) | Go, C, Rust | Response translation capability only. |
+| [`response-normalizer`](response-normalizer/go/main.go) | Go, C, Rust | Response normalization capability only. |
+| [`thinking`](thinking/go/main.go) | Go, C, Rust | Thinking applier capability only. |
+| [`usage`](usage/go/main.go) | Go, C, Rust | Usage observer capability only. |
+| [`cli`](cli/go/main.go) | Go, C, Rust | Command-line capability only. |
+| [`management-api`](management-api/go/main.go) | Go, C, Rust | Management API and resource capability only. |
+| [`host-callback`](host-callback/go/main.go) | Go, C, Rust | Minimal Management API route that triggers host HTTP and log callbacks. |
+| [`codex-service-tier`](codex-service-tier/README.md) | Go only | Request normalizer that sets Codex `gpt-5.5` requests to the priority service tier when `fast` is `true`. |
+| [`request-lifecycle`](request-lifecycle/README.md) | Go only | Request admission with concurrency control, active HTTP termination, and terminal callbacks. |
+| [`scheduler`](scheduler/README.md) | Go only | Scheduler that selects a configured auth ID, delegates to a built-in scheduler, or denies picks. |
+| [`claude-web-search-router`](claude-web-search-router/README.md) | Go only | ModelRouter plus executor for Claude Code built-in `web_search` (antigravity / codex / xai / Tavily). |
+| [`host-callback-auth-files`](host-callback-auth-files/README.md) | Go only | Management API resource that calls the host auth file callbacks. |
+| [`host-model-callback`](host-model-callback/README.md) | Go only | Management API resource that runs model execution through the host model callbacks. |
+
+`scripts/generate_examples.py` generates the single-capability examples from a capability table, so the C, Go, and Rust implementations of one capability stay in sync.
+
+## Plugin configuration
+
+The host reads these keys from the top-level `plugins` section of the CPA config (`internal/config/config_types.go:40-53`):
+
+- `enabled`: master switch. When `false`, the host loads no plugins at all (`internal/pluginhost/config.go:38-41`).
+- `dir`: plugin discovery directory, default `plugins`.
+- `store-sources`, `store-auth`: third-party plugin store registries and their auth rules.
+- `auth-revision`: bumped when Home-managed plugin credentials change.
+- `configs`: per-plugin settings keyed by plugin ID.
+
+Each entry under `configs` has two host-owned fields, `enabled` and `priority`; an entry without `enabled: true` stays disabled. The remaining YAML subtree is passed to the plugin as its config.
+
+```yaml
+plugins:
+  enabled: true
+  dir: plugins
+  configs:
+    codex-service-tier:
+      enabled: true
+      priority: 1
+      fast: true
+```
+
+## Build
+
+Prerequisites: Go, CMake (C examples), and Cargo (Rust examples).
+
+```bash
+make -C examples/plugin list
+make -C examples/plugin build
+```
+
+Artifacts land in `examples/plugin/bin` as `<example>-<go|c|rust>.<ext>`. The extension follows the OS: `.dylib` on macOS, `.so` on Linux, `.dll` on Windows (see the pattern rules in `examples/plugin/Makefile`).
+
+The Makefile builds the examples listed in its `EXAMPLES` variable. Seven Go-only examples are absent from that list — `codex-service-tier`, `request-lifecycle`, `scheduler`, `frontend-auth-exclusive`, `host-callback-auth-files`, `host-model-callback`, and `claude-web-search-router` — and build directly with `go build -buildmode=c-shared` as described in their own READMEs.
 
 ## Codex Service Tier
 
@@ -113,7 +155,7 @@ When a plugin executor encounters an upstream failure (such as `401 Unauthorized
 - If `http_status` is omitted or `0`, CPA defaults to returning HTTP `500 Internal Server Error` (`server_error` / `internal_server_error`), which clients typically treat as a temporary gateway outage and retry with backoff.
 - When `http_status` is set, CPA maps the status into client-visible error responses:
   - `401` -> HTTP 401 with `type: "authentication_error"`, `code: "invalid_api_key"`
-  - `403` -> HTTP 403 with `type: "permission_error"`, `code: "insufficient_quota"`
+  - `403` -> HTTP 403 with `type: "permission_error"`, `code: "upstream_permission_denied"`; the code becomes `insufficient_quota` when the error message mentions quota, credit, ACU, or exhaustion
   - `429` -> HTTP 429 with `type: "rate_limit_error"`, `code: "rate_limit_exceeded"`
   - `404` -> HTTP 404 with `type: "invalid_request_error"`, `code: "model_not_found"`
   - `>=500` -> HTTP 5xx with `type: "server_error"`, `code: "internal_server_error"`
@@ -152,15 +194,6 @@ func errorEnvelope(code, message string, httpStatus ...int) []byte {
 	return raw
 }
 ```
-
-## Build All Examples
-
-```bash
-make -C examples/plugin list
-make -C examples/plugin build
-```
-
-Artifacts are written to `examples/plugin/bin`.
 
 ## Notes
 

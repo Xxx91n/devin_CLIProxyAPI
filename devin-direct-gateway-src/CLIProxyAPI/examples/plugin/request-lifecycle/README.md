@@ -1,6 +1,8 @@
 # Request Lifecycle Plugin
 
-This Go dynamic-library plugin demonstrates request admission, active termination, and exactly-once terminal lifecycle handling. It requires a host that supports plugin RPC schema version 2 or newer.
+[English](README.md) | [简体中文](README_CN.md)
+
+This Go dynamic-library plugin demonstrates request admission, active termination, and terminal lifecycle handling. Hosts with plugin RPC schema older than version 2 are unsupported.
 
 It declares two optional capabilities:
 

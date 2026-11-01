@@ -1,5 +1,7 @@
 # 标准动态库插件示例
 
+[English](README.md) | [简体中文](README_CN.md)
+
 这是混合全部能力的完整骨架示例。单能力示例请查看 `../README_CN.md`。
 
 本目录是当前标准动态库插件 ABI 的参考骨架。ABI 与语言无关：宿主加载原生动态库，调用 `cliproxy_plugin_init`，然后通过稳定的 C 函数表交换 JSON 信封。
@@ -71,6 +73,8 @@ C ABI 不传递 Go interface、Go slice、Go map、Go channel、`context.Context
 - 命令行插件
 - Management API 插件
 
+执行器插件必须在能力块中声明 `executor_input_formats` 和 `executor_output_formats`。当客户端协议已被执行器声明时，宿主直接透传请求；否则宿主把入站请求翻译成一种已声明的输入格式，并把执行器响应翻译回客户端协议。本示例两个列表都声明 `chat-completions`，因此非 chat-completions 协议由宿主翻译。宿主也接受现有的内部别名 `openai`、`openai-response`、`claude`，分别对应 Chat Completions、Responses 和 Anthropic 协议。
+
 宿主保留现有优先级规则：原生逻辑优先，插件补齐缺口，高优先级插件先于低优先级插件执行。
 
 ## 目录布局
@@ -85,7 +89,7 @@ C ABI 不传递 Go interface、Go slice、Go map、Go channel、`context.Context
 
 在仓库根目录构建。
 
-构建全部插件示例，包括 `simple` 的三种语言实现：
+构建全部插件示例：
 
 ```bash
 make -C examples/plugin build
@@ -120,7 +124,7 @@ cp /tmp/cliproxy-simple-rust-target/release/libcliproxy_simple_rust.dylib ../../
 
 Linux、FreeBSD 或 Windows 使用相同源码目录，平台扩展名以 `examples/plugin/Makefile` 的规则为准。
 
-插件 ID 来自动态库文件名去掉平台扩展名。通过 Makefile 构建的产物分别对应 `plugins.configs.simple-go`、`plugins.configs.simple-c` 和 `plugins.configs.simple-rust`。
+插件 ID 来自动态库文件名去掉平台扩展名。ID 之后的 `-v<version>` 后缀也会被剥离，并记录为期望版本。通过 Makefile 构建的产物分别对应 `plugins.configs.simple-go`、`plugins.configs.simple-c` 和 `plugins.configs.simple-rust`。
 
 ## 发现规则
 
@@ -190,7 +194,7 @@ PATCH /v0/management/plugins/{pluginID}/config
 
 可由浏览器直接访问的菜单资源通过 `management.register` 的 `resources` 字段注册。CPA 会将这些资源暴露在 `/v0/resource/plugins/<pluginID>/...` 下；例如插件 ID 为 `example` 且资源路径为 `/status` 时，最终路径是 `/v0/resource/plugins/example/status`。
 
-## 信任边界
+## 局限与信任边界
 
 标准动态库插件是可信进程内代码。panic 恢复可以保护宿主管理的调用，但不能阻止插件退出进程、破坏内存、修改进程全局状态或泄露敏感数据。只安装你像信任服务二进制一样信任的插件。
 
