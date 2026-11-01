@@ -7,6 +7,9 @@ on:
       - synchronize
       - reopened
 
+permissions:
+  contents: read
+
 jobs:
   ensure-no-translator-changes:
     runs-on: ubuntu-latest
@@ -16,13 +19,13 @@ jobs:
           fetch-depth: 0
       - name: Detect internal/translator changes
         id: changed-files
-        uses: tj-actions/changed-files@v45
+        uses: tj-actions/changed-files@9426d40962ed5378910ee2e21d5f8c6fcbf2dd96 # v47.0.6 (pinned: CVE-2025-30066 poisoned the mutable v1-v45.0.7 tags)
         with:
           files: |
-            internal/translator/**
+            devin-direct-gateway-src/CLIProxyAPI/internal/translator/**
       - name: Fail when restricted paths change
-        if: steps.changed-files.outputs.any_changed == 'true'
+        if: steps.changed-files.outputs.any_modified == 'true'
         run: |
-          echo "Changes under internal/translator are not allowed in pull requests."
+          echo "Changes under devin-direct-gateway-src/CLIProxyAPI/internal/translator are not allowed in pull requests."
           echo "You need to create an issue for our maintenance team to make the necessary changes."
           exit 1

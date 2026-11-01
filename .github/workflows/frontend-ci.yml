@@ -1,11 +1,20 @@
-name: CI
+name: frontend-ci
 
 on:
   pull_request:
+    paths:
+      - 'devin-direct-gateway-src/Cli-Proxy-API-Management-Center/**'
+      - '.github/workflows/frontend-ci.yml'
   push:
     branches:
       - main
-      - dev
+    paths:
+      - 'devin-direct-gateway-src/Cli-Proxy-API-Management-Center/**'
+      - '.github/workflows/frontend-ci.yml'
+
+defaults:
+  run:
+    working-directory: devin-direct-gateway-src/Cli-Proxy-API-Management-Center
 
 jobs:
   verify:
