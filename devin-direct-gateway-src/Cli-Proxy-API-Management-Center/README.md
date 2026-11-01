@@ -5,7 +5,7 @@ A single-file Web UI (React + TypeScript) for managing **CLI Proxy API** through
 [English](README.md) | [简体中文](README_CN.md)
 
 **Main Project**: https://github.com/router-for-me/CLIProxyAPI  
-**Minimum Required Version**: ≥ 7.2.147 (recommended latest)
+**Recommended**: use the latest backend release (see `internal/managementasset/updater.go` for how the panel asset is synced)
 
 ## Scope
 

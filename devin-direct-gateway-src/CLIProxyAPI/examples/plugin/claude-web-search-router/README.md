@@ -27,7 +27,7 @@ The fallback route handles a request only when at least one backend is runnable:
 ### xAI notes
 
 - Model: `grok-4.3` when `xai_model` is empty. The client's Claude model name is never forwarded to xAI or Codex.
-- Request shape: Responses API `input` with `tools[]` type `web_search`, and optional `filters.allowed_domains` / `filters.excluded_domains` (per xAI docs: max 5 each, mutually exclusive).
+- Request shape: Responses API `input` with `tools[]` type `web_search`, and optional `filters.allowed_domains` / `filters.excluded_domains` (per xAI docs: the two fields are mutually exclusive and cannot be set in the same request).
 - Claude mapping: `internal/translator/codex/claude` copies Claude `allowed_domains` to `filters.allowed_domains`; Claude `blocked_domains` is not forwarded, and mapping it to `filters.excluded_domains` is not yet supported.
 - The host's xAI executor drops the unsupported `external_web_access` tool field and posts to `/responses`.
 - Citations and server tool metadata come back through the OpenAI Responses SSE path and are converted to Claude `server_tool_use` / `web_search_tool_result` blocks where the response translator supports them.

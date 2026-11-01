@@ -4,7 +4,7 @@
 
 这个示例把语音音频发送给 CLIProxyAPI，并把模型返回的语音回复保存为 WAV 文件。
 
-它使用官方 [`github.com/openai/openai-go/v3`](https://github.com/openai/openai-go) SDK 创建短时效的 Realtime client secret。官方 Go SDK 目前只提供 Realtime REST 资源，没有 WebSocket 连接辅助方法，因此标准的 Realtime 音频事件使用 `github.com/gorilla/websocket` 处理。
+它使用官方 [`github.com/openai/openai-go/v3`](https://github.com/openai/openai-go) SDK 创建短时效的 Realtime client secret。本示例固定的 SDK 版本（`go.mod` 中的 `v3.50.0`）只提供 Realtime REST 资源，没有 WebSocket 连接辅助方法（`client.Realtime.Connect` 在后续 v3 版本才加入），因此标准的 Realtime 音频事件使用 `github.com/gorilla/websocket` 处理。
 
 ## 前置条件
 
@@ -70,7 +70,7 @@ ffplay -autoexit response.wav
 | `OPENAI_REALTIME_OUTPUT_WAV` | 否 | `response.wav` | 语音回复的输出文件。 |
 | `OPENAI_BASE_URL` | 否 | `http://127.0.0.1:8317/v1` | CLIProxyAPI 的 OpenAI 兼容 base URL。URL 没有路径时会补上 `/v1`。 |
 | `OPENAI_REALTIME_MODEL` | 否 | `gpt-realtime-2.1` | 标准 Realtime 模型名。CLIProxyAPI 用它连接上游标准 WebSocket，同时在内部选择兼容的 Codex OAuth 凭据。 |
-| `OPENAI_REALTIME_VOICE` | 否 | `marin` | Realtime 输出音色。其他常见取值包括 `cedar`、`alloy`、`ash`、`coral` 和 `echo`。 |
+| `OPENAI_REALTIME_VOICE` | 否 | `marin` | Realtime 输出音色。可用音色见 OpenAI 的 [Realtime 文档](https://platform.openai.com/docs/guides/realtime)。 |
 | `OPENAI_REALTIME_INSTRUCTIONS` | 否 | `Listen to the user's speech and reply with a short spoken response.` | 附着在 client secret 上的会话指令。 |
 | `OPENAI_REALTIME_DEBUG` | 否 | `false` | 打印收到的每一条 Realtime 服务端事件。 |
 

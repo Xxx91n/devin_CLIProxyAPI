@@ -27,7 +27,7 @@
 ### xAI 说明
 
 - 模型：`xai_model` 为空时使用 `grok-4.3`。客户端的 Claude 模型名永远不会转发给 xAI 或 Codex。
-- 请求形态：Responses API 的 `input`，`tools[]` 类型为 `web_search`，可选 `filters.allowed_domains` / `filters.excluded_domains`（xAI 文档：各最多 5 个，二者互斥）。
+- 请求形态：Responses API 的 `input`，`tools[]` 类型为 `web_search`，可选 `filters.allowed_domains` / `filters.excluded_domains`（xAI 文档：两个字段互斥，不能同时出现在同一请求中）。
 - Claude 映射：`internal/translator/codex/claude` 会把 Claude 的 `allowed_domains` 复制为 `filters.allowed_domains`；Claude 的 `blocked_domains` 暂不支持映射为 `filters.excluded_domains`，也不会原样转发。
 - 宿主的 xAI 执行器会丢弃不支持的 `external_web_access` 工具字段，并 POST 到 `/responses`。
 - 引用与 server tool 元数据经 OpenAI Responses SSE 返回，在响应翻译器支持范围内转换为 Claude 的 `server_tool_use` / `web_search_tool_result` 块。

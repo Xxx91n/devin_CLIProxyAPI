@@ -4,7 +4,7 @@
 
 This example sends spoken audio to CLIProxyAPI and saves the model's spoken reply as a WAV file.
 
-It uses the official [`github.com/openai/openai-go/v3`](https://github.com/openai/openai-go) SDK to create a short-lived Realtime client secret. The official Go SDK currently exposes the Realtime REST resources but does not provide a WebSocket connection helper, so `github.com/gorilla/websocket` is used for the standard Realtime audio events.
+It uses the official [`github.com/openai/openai-go/v3`](https://github.com/openai/openai-go) SDK to create a short-lived Realtime client secret. The pinned SDK version (`v3.50.0` in `go.mod`) exposes the Realtime REST resources but no WebSocket connection helper — `client.Realtime.Connect` only appeared in later v3 releases — so `github.com/gorilla/websocket` is used for the standard Realtime audio events.
 
 ## Prerequisites
 
@@ -70,7 +70,7 @@ ffplay -autoexit response.wav
 | `OPENAI_REALTIME_OUTPUT_WAV` | No | `response.wav` | Destination for the spoken response. |
 | `OPENAI_BASE_URL` | No | `http://127.0.0.1:8317/v1` | CLIProxyAPI OpenAI-compatible base URL. `/v1` is added when the URL has no path. |
 | `OPENAI_REALTIME_MODEL` | No | `gpt-realtime-2.1` | Standard Realtime model name. CLIProxyAPI uses it for the upstream standard WebSocket while selecting a compatible Codex OAuth credential internally. |
-| `OPENAI_REALTIME_VOICE` | No | `marin` | Realtime output voice. Other common values include `cedar`, `alloy`, `ash`, `coral`, and `echo`. |
+| `OPENAI_REALTIME_VOICE` | No | `marin` | Realtime output voice. Available voices are listed in OpenAI's [Realtime docs](https://platform.openai.com/docs/guides/realtime). |
 | `OPENAI_REALTIME_INSTRUCTIONS` | No | `Listen to the user's speech and reply with a short spoken response.` | Session instructions attached to the client secret. |
 | `OPENAI_REALTIME_DEBUG` | No | `false` | Print every received Realtime server event. |
 

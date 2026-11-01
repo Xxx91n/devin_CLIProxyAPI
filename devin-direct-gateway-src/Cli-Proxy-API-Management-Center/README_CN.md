@@ -5,7 +5,7 @@
 [English](README.md) | [简体中文](README_CN.md)
 
 **主项目**： https://github.com/router-for-me/CLIProxyAPI  
-**最低版本要求**： ≥ 7.2.147（推荐最新）
+**推荐**：使用最新的后端发布版本（面板资源的同步机制见 `internal/managementasset/updater.go`）
 
 ## 范围说明
 
