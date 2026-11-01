@@ -1,5 +1,7 @@
 # Example Standard Dynamic Library Plugin
 
+[English](README.md) | [简体中文](README_CN.md)
+
 This is the full mixed-capability skeleton. For single-capability examples, see `../README.md`.
 
 This directory is the reference skeleton for the current standard dynamic library plugin ABI. The ABI is language-neutral: the host loads a native dynamic library, calls `cliproxy_plugin_init`, and then exchanges JSON envelopes through a stable C function table.
@@ -122,7 +124,7 @@ cp /tmp/cliproxy-simple-rust-target/release/libcliproxy_simple_rust.dylib ../../
 
 For Linux, FreeBSD, or Windows, keep the same source directory and use the platform extension selected by `examples/plugin/Makefile`.
 
-The plugin ID is the dynamic library basename without the platform extension. Makefile-built artifacts map to `plugins.configs.simple-go`, `plugins.configs.simple-c`, and `plugins.configs.simple-rust`.
+The plugin ID is the dynamic library basename without the platform extension. A `-v<version>` suffix after the ID is also stripped and recorded as the desired version. Makefile-built artifacts map to `plugins.configs.simple-go`, `plugins.configs.simple-c`, and `plugins.configs.simple-rust`.
 
 ## Discovery
 
@@ -192,7 +194,7 @@ Plugin-owned Management API routes are registered through the `routes` field of 
 
 Browser-navigable menu resources are registered through the `resources` field of `management.register`. CPA exposes those resources under `/v0/resource/plugins/<pluginID>/...`; for example, a plugin with ID `example` and resource path `/status` is served as `/v0/resource/plugins/example/status`.
 
-## Trust Boundary
+## Limitations and Trust Boundary
 
 Standard dynamic library plugins are trusted in-process code. Panic recovery can protect host-managed calls, but it cannot prevent a plugin from exiting the process, corrupting memory, mutating global process state, or leaking secrets. Install only plugins you trust as much as the service binary.
 

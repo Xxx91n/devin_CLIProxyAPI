@@ -1,45 +1,49 @@
 # devin_CLIProxyAPI
 
-A high-performance reverse proxy and multi-account credential management gateway for Cognition's Devin AI platform, providing an OpenAI-compatible `/v1` API surface.
+[English](README.md) | [简体中文](README_CN.md)
 
-## Overview
+A Go reverse-proxy gateway for Cognition's Devin AI, with a React management dashboard. Clients call an OpenAI-compatible `/v1` API; the gateway translates those requests into Connect-RPC calls against `server.codeium.com` and pools multiple Devin accounts behind one endpoint.
 
-`devin_CLIProxyAPI` bridges client applications and agentic workflows to the Devin backend (`server.codeium.com`) using Connect-RPC protocol translation. It provides enterprise-ready multi-account pooling, session affinity, intelligent error handling, tool description sanitization, and a modern Web management dashboard.
+The gateway is built on the CLIProxyAPI codebase (Go module `github.com/router-for-me/CLIProxyAPI/v7`, declared in `devin-direct-gateway-src/CLIProxyAPI/go.mod`). This fork's focus is the Devin provider; the codebase still carries the upstream providers for Claude, Codex, Gemini, and others (see `internal/auth/`).
 
-## Key Features
+## What it does
 
-- **Devin Upstream Integration**: Connect-RPC translation targeting `ApiServerService/GetChatMessage`, impersonating devin-cli client requirements with normalized RFC 4122 Session / Cascade UUIDs.
-- **Multi-Account Credential Pooling**: Load-balance multiple Devin accounts with round-robin scheduling and session-specific request pools.
-- **Session Affinity**: Sticky credential binding by session ID / message hash across multi-turn interactions, preventing upstream conversation state corruption.
-- **Request-Scoped Error Classification**: Automatically isolates request-attributed trailer errors (`invalid_argument`, `permission_denied`) to fail only the immediate request without triggering credential cooldowns or disrupting healthy accounts.
-- **Tool Description Sanitization & Policy Observation**: Configurable sentence-level sanitization against sensitive keywords and regex-based policy observation rules to avoid upstream tool declaration rejections.
-- **Devin OAuth 2.0 PKCE Flow**: One-click browser login via the management control panel to acquire and hot-register Devin session credentials.
-- **Web Management Dashboard**: Embedded Single-Page Application (SPA) for real-time quota tracking, account status inspection, and dynamic configuration.
+- **OpenAI-compatible API surface**: `/v1/chat/completions`, `/v1/completions`, `/v1/responses`, `/v1/messages` (Claude format), and more (`internal/api/server_routes.go:66-79`).
+- **Devin protocol translation**: the executor builds `GetChatMessageRequest` protobuf bodies by hand and posts them to `https://server.codeium.com/exa.api_server_pb.ApiServerService/GetChatMessage`, matching the devin-cli client (`CONTEXT.md`, `internal/runtime/executor/helps/devin_wire.go:36-38`).
+- **Multi-account pooling**: round-robin (default), weighted round-robin, and fill-first scheduling, with a per-credential cooldown on transient upstream errors (`config.example.yaml:235-261`).
+- **Session affinity**: a conversation stays bound to one credential across turns, so upstream session state is not corrupted; TTL and subagent handling are configurable (`internal/config/config_types.go:365-376`, `sdk/cliproxy/auth/conductor_selection.go`).
+- **Request-scoped error handling**: Devin trailer errors such as `permission_denied` map to HTTP 403 and fail only the current request; the credential is not cooled down (`internal/api/devin_contract_golden_test.go:374-390`).
+- **Tool declaration sanitization**: sensitive-word matching rewrites system prompts and tool descriptions before they reach upstream (`internal/runtime/executor/helps/devin_wire.go:615,663`); observe-only policy rules log matches without altering requests (`config.example.yaml:927-937`).
+- **Devin OAuth login**: PKCE browser flow, exposed as the `-devin-login` flag (`internal/auth/devin/pkce.go`, `cmd/server/main.go:142`) and through the dashboard.
+- **Web management dashboard**: a single-file React app served at `/management.html` (`internal/api/server_routes.go:54`); the backend also fetches the latest panel into its static directory on demand (`internal/managementasset/updater.go:189`).
 
-## Repository Structure
+## Repository layout
 
 ```text
 devin_CLIProxyAPI/
 ├── devin-direct-gateway-src/
-│   ├── CLIProxyAPI/                     # Go-based reverse proxy & API gateway
-│   │   ├── cmd/server/                  # Main entrypoint
-│   │   ├── internal/                    # Core proxy logic, executors, translators, registry
-│   │   │   ├── auth/devin/              # Devin OAuth & user status service
-│   │   │   ├── runtime/executor/        # Devin Connect-RPC executor & wire serialization
-│   │   │   └── registry/                # Conductor, credential pool, session affinity
-│   │   ├── config.example.yaml          # Complete configuration template
-│   │   └── CONTEXT.md                   # Devin provider protocol specification
-│   └── Cli-Proxy-API-Management-Center/ # Frontend management control panel (React 19 + Vite)
-│       ├── src/                         # UI features (dashboard, quota, authFiles, providers)
-│       └── package.json                 # Bun/Vite build definition
+│   ├── CLIProxyAPI/                     # Go gateway (module github.com/router-for-me/CLIProxyAPI/v7)
+│   │   ├── cmd/server/                  # Entrypoint; -config, -devin-login flags
+│   │   ├── internal/
+│   │   │   ├── api/                     # HTTP routes, middleware, Devin contract tests
+│   │   │   ├── auth/devin/              # Devin OAuth PKCE flow and user status
+│   │   │   ├── config/                  # YAML configuration schema
+│   │   │   ├── managementasset/         # management.html download and update
+│   │   │   ├── registry/                # Model registry and Devin model metadata
+│   │   │   └── runtime/executor/        # Devin Connect-RPC executor and wire codecs
+│   │   ├── sdk/cliproxy/auth/           # Conductor: credential pool, scheduling, session affinity
+│   │   ├── config.example.yaml          # Full configuration template
+│   │   ├── CONTEXT.md                   # Devin upstream protocol notes
+│   │   └── LICENSE                      # MIT
+│   └── Cli-Proxy-API-Management-Center/ # React 19 + Vite dashboard (Bun)
 └── README.md
 ```
 
-## Quick Start
+## Build and run
 
-### 1. Build & Run the Backend
+### Backend
 
-Prerequisites: Go 1.23+
+Requires Go 1.26 or newer (`devin-direct-gateway-src/CLIProxyAPI/go.mod`).
 
 ```bash
 cd devin-direct-gateway-src/CLIProxyAPI
@@ -54,11 +58,11 @@ cp config.example.yaml config.yaml
 ./cli-proxy-api -config config.yaml
 ```
 
-The proxy starts listening on `http://127.0.0.1:13015` by default.
+The server listens on port `8317` by default (`config.example.yaml`).
 
-### 2. Build the Management Center (Optional)
+### Management dashboard (optional)
 
-Prerequisites: [Bun](https://bun.sh/) 1.3+
+Requires [Bun](https://bun.sh/) 1.3+ (`packageManager` field in `package.json`).
 
 ```bash
 cd devin-direct-gateway-src/Cli-Proxy-API-Management-Center
@@ -67,11 +71,11 @@ bun install --frozen-lockfile
 bun run build
 ```
 
-The production output generates an inlined single-file `dist/index.html`. Rename or place it at `CLIProxyAPI/static/management.html` to serve it directly from the backend via `/management.html`.
+The build emits a single inlined `dist/index.html` (`vite-plugin-singlefile`). Place it as `management.html` in the backend's static directory, or let the backend fetch the latest panel itself; either way it is served at `/management.html`.
 
-## Configuration Highlights
+## Configuration
 
-In `config.yaml`:
+Selected keys from `config.yaml` (full template in `devin-direct-gateway-src/CLIProxyAPI/config.example.yaml`):
 
 ```yaml
 # Devin Provider Configuration
@@ -105,6 +109,32 @@ oauth-tool-policy-observe:
         - "(?i)file ?system[\\s\\S]{0,200}access\\s+any\\s+file"
 ```
 
+All keys above exist in the config schema (`internal/config/config.go:74-184`, `internal/config/config_types.go:365-376`); the scoped-error and tool-policy blocks are active examples, while `config.example.yaml` ships them commented out.
+
+## Limitations
+
+- The Devin upstream reports errors inside the Connect-RPC end-stream frame, after HTTP 200 is committed. Once a response stream has begun, a failure surfaces mid-stream instead of as a clean HTTP status (`CONTEXT.md:14`).
+- Tool-policy observe rules only log matches; the request itself is never altered or rejected (`config.example.yaml:927-928`).
+- Session affinity defaults to false; the sample above turns it on explicitly (`config.example.yaml:248`).
+
+## Tests
+
+```bash
+cd devin-direct-gateway-src/CLIProxyAPI
+go test ./...
+
+# Devin wire-contract tests
+go test -v ./internal/api -run TestDevinContract
+```
+
+Frontend checks, from `devin-direct-gateway-src/Cli-Proxy-API-Management-Center`:
+
+```bash
+bun run test       # bun test
+bun run lint       # eslint
+bun run type-check # tsc --noEmit
+```
+
 ## License
 
-This project is released under the MIT License. See [LICENSE](file:///d:/Aworker/devin_local/devin-direct-gateway-src/CLIProxyAPI/LICENSE) for details.
+This project is released under the MIT License. See [LICENSE](devin-direct-gateway-src/CLIProxyAPI/LICENSE) for details.

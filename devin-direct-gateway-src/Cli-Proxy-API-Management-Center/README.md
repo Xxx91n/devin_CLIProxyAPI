@@ -1,26 +1,15 @@
 # CLI Proxy API Management Center
 
-A single-file Web UI (React + TypeScript) for operating and troubleshooting the **CLI Proxy API** via its **Management API** (config, credentials, and logs).
+A single-file Web UI (React + TypeScript) for managing **CLI Proxy API** through its **Management API**: config, credentials, OAuth, quota, and logs.
 
-[中文文档](README_CN.md)
+[English](README.md) | [简体中文](README_CN.md)
 
-**Main Project**: https://github.com/router-for-me/CLIProxyAPI   
+**Main Project**: https://github.com/router-for-me/CLIProxyAPI  
 **Minimum Required Version**: ≥ 7.2.147 (recommended latest)
 
-Since version 6.0.19, the Web UI ships with the main program; access it via `/management.html` on the API port once the service is running.
+## Scope
 
-## Sponsor
-
-[![https://go.apimart.ai/gh-cli-proxy-api-management-center](./assets/apimart-en.png)](https://go.apimart.ai/gh-cli-proxy-api-management-center)
-
-Thanks to APIMart for sponsoring this project!
-
-APIMart is a low-cost API platform for AI image & video generation — GPT-Image-2 from $0.006/image, 160+ images per dollar. One async API covers both image and video: submit a task, get an ID, fetch results via polling or callback. Batch tens of thousands of images without timeouts, switch models without changing code. Pay-as-you-go with no monthly fee — [sign up here](https://go.apimart.ai/gh-cli-proxy-api-management-center) to get started.
-
-## What this is (and isn’t)
-
-- This repository is the Web UI only. It talks to the CLI Proxy API **Management API** (`/v0/management`) to read/update config, upload credentials, and view logs.
-- It is **not** a proxy and does not forward traffic.
+This repository contains the Web UI only. It talks to the CLI Proxy API **Management API** (`/v0/management`) to read and update config, manage credentials, and view logs. It is not a proxy and does not forward traffic.
 
 ## Quick start
 
@@ -30,7 +19,7 @@ APIMart is a low-cost API platform for AI image & video generation — GPT-Image
 2. Open: `http://<host>:<api_port>/management.html`
 3. Enter your **management key** and connect.
 
-The address is auto-detected from the current page URL; manual override is supported.
+The backend serves this page on the API port and downloads the panel asset from GitHub releases automatically. The API address is auto-detected from the page URL; manual override is supported.
 
 ### Option B: Run the dev server
 
@@ -48,22 +37,22 @@ bun install --frozen-lockfile
 bun run build
 ```
 
-- Output: `dist/index.html` (all assets are inlined).
-- For CLI Proxy API bundling, the release workflow renames it to `management.html`.
+- Output: `dist/index.html` (all assets inlined).
+- For CLI Proxy API bundling, the panel asset is published as `management.html`.
 - To preview locally: `bun run preview`
 
-Tip: opening `dist/index.html` via `file://` may be blocked by browser CORS; serving it (preview/static server) is more reliable.
+Tip: opening `dist/index.html` via `file://` may be blocked by browser CORS; serving it (preview or a static server) is more reliable.
 
 ## Connecting to the server
 
 ### API address
 
-You can enter any of the following; the UI will normalize it:
+Any of these formats works; the UI normalizes them:
 
 - `localhost:8317`
 - `http://192.168.1.10:8317`
 - `https://example.com:8317`
-- `http://example.com:8317/v0/management` (also accepted; the suffix is removed internally)
+- `http://example.com:8317/v0/management` (the suffix is stripped internally)
 
 ### Management key (not the same as API keys)
 
@@ -71,72 +60,68 @@ The management key is sent with every request as:
 
 - `Authorization: Bearer <MANAGEMENT_KEY>` (default)
 
-This is different from the proxy `api-keys` you manage inside the UI (those are for client requests to the proxy endpoints).
+This is different from the proxy `api-keys` you manage inside the UI; those authenticate client requests to the proxy endpoints.
 
 ### Remote management
 
-If you connect from a non-localhost browser, the server must allow remote management (e.g. `allow-remote-management: true`).  
-Check the CLI Proxy API server documentation/config comments for the full authentication rules, server-side limits, and edge cases.
+When the browser is not on localhost, the server must allow remote management:
+
+```yaml
+remote-management:
+  allow-remote: true
+```
+
+The management key is `secret-key` under the same block (plaintext or bcrypt hashed). Check the CLI Proxy API server documentation for the full authentication rules and server-side limits.
 
 ## What you can manage (mapped to the UI pages)
 
 - **Dashboard**: connection status, server version/build date, quick counts, model availability snapshot.
-- **Config Panel**: visual editor for common `config.yaml` fields, basic settings, proxy `api-keys`, and source editing with YAML highlighting/search plus a save diff preview.
+- **Config Panel**: visual editor for common `config.yaml` fields, basic settings, and proxy `api-keys`; YAML source editing with highlighting/search and a save diff preview.
 - **AI Providers**:
-  - Gemini/Codex/Claude/Vertex key entries (base URL, headers, proxy, model aliases, excluded models, prefix).
-  - OpenAI-compatible providers (multiple API keys, custom headers, model alias import via `/v1/models`, optional browser-side "chat/completions" test).
-- **Auth Files**: upload/download/delete JSON credentials, filter/search/pagination, runtime-only indicators, view supported models per credential (when the server supports it), manage OAuth excluded models (supports `*` wildcards), configure OAuth model alias mappings.
-- **OAuth**: start OAuth/device flows for Codex, Anthropic/Claude, Antigravity, Kimi, and xAI/Grok; poll status; submit callback URLs or xAI/Grok displayed codes; import Vertex JSON credentials and iFlow cookies.
-- **Quota Management**: manage quota limits and usage for Claude, Antigravity, Codex, Kimi, xAI/Grok, and other providers.
-- **Logs**: tail logs with incremental polling, auto-refresh, search, hide management traffic, clear logs; download request error log files.
-- **System**: quick links, update check, request logging toggle, local login data cleanup, and fetch `/v1/models` (grouped view). Requires at least one proxy API key to query models.
+  - Gemini/Codex/Claude/Vertex/xAI/Kimi key entries (base URL, headers, proxy, model aliases, excluded models, prefix).
+  - OpenAI-compatible providers (multiple API keys, custom headers, model alias import via `/v1/models`, optional browser-side `chat/completions` test).
+- **Auth Files**: upload/download/delete JSON credentials, filter/search/pagination, runtime-only indicators; view supported models per credential (when the server supports it); manage OAuth excluded models (supports `*` wildcards); configure OAuth model alias mappings.
+- **OAuth**: start OAuth/device flows for Kimi, Codex, Anthropic/Claude, Antigravity, xAI/Grok, and Devin; poll status; submit callback URLs; import Vertex JSON credentials.
+- **Quota Management**: manage quota limits and usage for Devin, Claude, Codex, Antigravity, Kimi, and xAI/Grok.
+- **Plugins**: plugin pages, installed plugins, and plugin store (shown when the backend supports plugins).
+- **Logs**: tail logs with incremental polling, auto-refresh, search, and clear; download request error log files.
+- **System**: quick links, update check, request logging toggle, local login data cleanup, and a grouped `/v1/models` view. Requires at least one proxy API key to query models.
 
-## Tech Stack
+## Tech stack
 
 - React 19 + TypeScript 6.0
-- Vite 8 (single-file build)
-- Zustand (state management)
-- Axios (HTTP client)
+- Vite 8 (single-file build via `vite-plugin-singlefile`)
+- Zustand (state management) and Axios (HTTP client)
 - react-router-dom v7 (HashRouter)
-- Motion (animations)
-- CodeMirror 6 (YAML editor)
-- SCSS Modules (styling)
-- i18next (internationalization)
+- CodeMirror 6 (YAML editor), SCSS Modules (styling)
+- Motion (animations), i18next (internationalization)
 
-## Internationalization
+## Languages
 
-Currently supports four languages:
+Four UI languages are supported:
 
 - English (en)
 - Simplified Chinese (zh-CN)
 - Traditional Chinese (zh-TW)
 - Russian (ru)
 
-The UI language is automatically detected from browser settings and can be manually switched from the login page or header language menu.
+The UI language is detected from browser settings and can be switched from the login page or the header language menu.
 
-## Browser Compatibility
+## Build notes
 
-- Build target: `ES2020`
-- Supports modern browsers (Chrome, Firefox, Safari, Edge)
-- Responsive layout for mobile and tablet access
-
-## Build & release notes
-
-- Vite produces a **single HTML** output (`dist/index.html`) with all assets inlined (via `vite-plugin-singlefile`).
-- Tagging `vX.Y.Z` triggers `.github/workflows/release.yml` to publish `dist/management.html`.
+- Build target is `ES2020`; the output is a single `dist/index.html` with all assets inlined.
 - The UI version shown on the System page is injected at build time (env `VERSION`, git tag, or `package.json` fallback).
 
 ## Security notes
 
-- The management key is stored in browser `localStorage` using a lightweight obfuscation format (`enc::v1::...`) to avoid plaintext storage; treat it as sensitive.
-- Use a dedicated browser profile/device for management. Be cautious when enabling remote management and evaluate its exposure surface.
+- The management key is stored in browser `localStorage` in a lightly obfuscated form (`enc::v1::...`) rather than plaintext; treat it as sensitive. The obfuscation is reversible and is not a security boundary.
+- Use a dedicated browser profile or device for management, and weigh the exposure before enabling remote management.
 
 ## Troubleshooting
 
-- **Can’t connect / 401**: confirm the API address and management key; remote access may require enabling remote management in the server config.
-- **Repeated auth failures**: the server may temporarily block remote IPs.
-- **Logs page missing**: enable “Logging to file” in Basic Settings; the navigation item is shown only when file logging is enabled.
-- **Some features show “unsupported”**: the backend may be too old or the endpoint is disabled/absent (common for model lists per auth file, excluded models, logs).
+- **Can't connect / 401**: confirm the API address and management key; non-localhost access requires `allow-remote: true` on the server.
+- **Locked out after repeated failures**: the server temporarily bans remote IPs after too many failed management-key attempts.
+- **Some features show "unsupported"**: the backend may be too old or the endpoint is disabled/absent (common for model lists per auth file, excluded models, and logs).
 - **OpenAI provider test fails**: the test runs in the browser and depends on network/CORS of the provider endpoint; a failure here does not always mean the server cannot reach it.
 
 ## Development
@@ -146,7 +131,7 @@ bun run dev        # Vite dev server
 bun run build      # tsc + Vite build
 bun run preview    # serve dist locally
 bun run test       # Bun test suite
-bun run lint       # ESLint (fails on warnings)
+bun run lint       # ESLint
 bun run verify     # test + lint + build
 bun run format     # Prettier
 bun run type-check # tsc --noEmit

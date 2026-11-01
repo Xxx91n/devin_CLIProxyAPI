@@ -1,5 +1,7 @@
 # Scheduler Plugin
 
+[English](README.md) | [简体中文](README_CN.md)
+
 This plugin demonstrates the CLIProxyAPI C ABI scheduler capability from Go.
 
 It implements:
@@ -39,6 +41,10 @@ Behavior:
 - When `delegate` is empty and `auth_id` exists in the candidates, the plugin returns that auth ID and marks the pick as handled.
 - When no rule matches, the plugin leaves the pick unhandled.
 
+## Limitations
+
+`deny` takes precedence over `auth_id` and `delegate`. When it is `true`, the other two fields have no effect.
+
 ## Build
 
 From this directory:
@@ -46,5 +52,7 @@ From this directory:
 ```bash
 cd go
 go build -buildmode=c-shared -o /tmp/cliproxy-scheduler-plugin.so .
-rm -f /tmp/cliproxy-scheduler-plugin.so /tmp/cliproxy-scheduler-plugin.h
+rm -f /tmp/cliproxy-scheduler-plugin.h
 ```
+
+The output filename is the plugin ID, so name the artifact after the key you use under `plugins.configs`.
