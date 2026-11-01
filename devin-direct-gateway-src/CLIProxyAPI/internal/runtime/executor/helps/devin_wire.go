@@ -610,7 +610,8 @@ func ParseDevinFrame(payload []byte) (DevinFrameResult, error) {
 }
 
 // SanitizeDevinSystemPrompt strips Claude Code attribution and CLI identity headers
-// (referencing Antigravity conventions), and applies zero-width obfuscation for configured sensitive words.
+// (referencing Antigravity conventions), drops lines the upstream content policy
+// rejects, and applies zero-width obfuscation for configured sensitive words.
 func SanitizeDevinSystemPrompt(prompt string, matcher *SensitiveWordMatcher) string {
 	if prompt == "" {
 		return ""
@@ -633,6 +634,12 @@ func SanitizeDevinSystemPrompt(prompt string, matcher *SensitiveWordMatcher) str
 			continue
 		}
 		if strings.Contains(trimmed, "Fast mode for Claude Code") {
+			continue
+		}
+		// zcode ships this style instruction in every Agent-tool subagent system
+		// message; the upstream content policy rejects the lead-in paired with the
+		// plural word on one line, though each alone passes.
+		if strings.Contains(trimmed, "For clear communication with the user") && strings.Contains(trimmed, "emojis") {
 			continue
 		}
 		if matcher != nil && matcher.Matches(trimmed) {

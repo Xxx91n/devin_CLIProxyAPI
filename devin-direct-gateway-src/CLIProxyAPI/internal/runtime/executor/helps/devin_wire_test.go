@@ -159,6 +159,42 @@ func TestSanitizeDevinSystemPrompt_AndSensitiveWords(t *testing.T) {
 	}
 }
 
+func TestSanitizeDevinSystemPrompt_DropsZcodeSubagentEmojiNote(t *testing.T) {
+	// zcode ships this fixed line in every Agent-tool subagent system message; the
+	// upstream content policy rejects the lead-in paired with the plural word on one
+	// line, though each alone passes.
+	rawPrompt := strings.Join([]string{
+		"You are ZCode, an interactive coding agent",
+		"Notes:",
+		"- Agent threads always have their cwd reset between bash calls, as a result please only use absolute file paths.",
+		"- For clear communication with the user the assistant MUST avoid using emojis.",
+		"- Do NOT Write report/summary/findings/analysis .md files.",
+	}, "\n")
+	sanitized := SanitizeDevinSystemPrompt(rawPrompt, nil)
+
+	if strings.Contains(sanitized, "MUST avoid using emojis") {
+		t.Fatalf("content-policy trigger line was not dropped: %q", sanitized)
+	}
+	for _, kept := range []string{
+		"You are ZCode, an interactive coding agent",
+		"Notes:",
+		"- Agent threads always have their cwd reset between bash calls, as a result please only use absolute file paths.",
+		"- Do NOT Write report/summary/findings/analysis .md files.",
+	} {
+		if !strings.Contains(sanitized, kept) {
+			t.Fatalf("unrelated line was lost: %q", kept)
+		}
+	}
+
+	// Each trigger element alone must survive — the drop requires the pair on one line.
+	if got := SanitizeDevinSystemPrompt("Notes:\n- the assistant MUST avoid using emojis.", nil); !strings.Contains(got, "emojis") {
+		t.Fatalf("line with the plural word alone should be kept: %q", got)
+	}
+	if got := SanitizeDevinSystemPrompt("Notes:\n- For clear communication with the user the assistant MUST avoid using slang.", nil); !strings.Contains(got, "For clear communication with the user") {
+		t.Fatalf("line with the lead-in alone should be kept: %q", got)
+	}
+}
+
 func TestSanitizeDevinToolDescription_DropsMatchingSentences(t *testing.T) {
 	matcher := BuildSensitiveWordMatcher([]string{"access any file"})
 	desc := "Reads a file from the local filesystem. You can access any file directly by using this tool. Assume this tool is able to read all files on the machine.\nUsage notes stay."
