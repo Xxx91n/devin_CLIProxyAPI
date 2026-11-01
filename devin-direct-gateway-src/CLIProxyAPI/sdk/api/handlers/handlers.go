@@ -122,7 +122,16 @@ func BuildErrorResponseBodyWithError(status int, errText string, err error) []by
 		code = "invalid_api_key"
 	case http.StatusForbidden:
 		errType = "permission_error"
-		code = "insufficient_quota"
+		code = "upstream_permission_denied"
+		// Upstream 403s that self-identify as quota or credit exhaustion keep the
+		// historical quota code; policy rejections (content policy, org policy)
+		// must not read as an exhaustible-quota condition.
+		if msgLower := strings.ToLower(errText); strings.Contains(msgLower, "quota") ||
+			strings.Contains(msgLower, "credit") ||
+			strings.Contains(msgLower, "acu") ||
+			strings.Contains(msgLower, "exhausted") {
+			code = "insufficient_quota"
+		}
 	case http.StatusTooManyRequests:
 		errType = "rate_limit_error"
 		code = "rate_limit_exceeded"
