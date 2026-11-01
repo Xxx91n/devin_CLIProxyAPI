@@ -76,19 +76,19 @@ static int plugin_call(const char* method, const uint8_t* request, size_t reques
 		return 1;
 	}
 	if (strcmp(method, "plugin.register") == 0) {
-		write_response(response, "{\"ok\":true,\"result\":{\"schema_version\":1,\"metadata\":{\"Name\":\"example-management-api-c\",\"Version\":\"0.1.0\",\"Author\":\"router-for-me\",\"GitHubRepository\":\"https://github.com/router-for-me/CLIProxyAPI\",\"Logo\":\"https://example.invalid/example-management-api-c.png\",\"ConfigFields\":[]},\"capabilities\":{\"management_api\":true}}}");
+		write_response(response, "{\"ok\":true,\"result\":{\"schema_version\":6,\"metadata\":{\"Name\":\"example-management-api-c\",\"Version\":\"0.1.0\",\"Author\":\"router-for-me\",\"GitHubRepository\":\"https://github.com/router-for-me/CLIProxyAPI\",\"Logo\":\"https://example.invalid/example-management-api-c.png\",\"ConfigFields\":[]},\"capabilities\":{\"management_api\":true}}}");
 		return 0;
 	}
 	if (strcmp(method, "plugin.reconfigure") == 0) {
-		write_response(response, "{\"ok\":true,\"result\":{\"schema_version\":1,\"metadata\":{\"Name\":\"example-management-api-c\",\"Version\":\"0.1.0\",\"Author\":\"router-for-me\",\"GitHubRepository\":\"https://github.com/router-for-me/CLIProxyAPI\",\"Logo\":\"https://example.invalid/example-management-api-c.png\",\"ConfigFields\":[]},\"capabilities\":{\"management_api\":true}}}");
+		write_response(response, "{\"ok\":true,\"result\":{\"schema_version\":6,\"metadata\":{\"Name\":\"example-management-api-c\",\"Version\":\"0.1.0\",\"Author\":\"router-for-me\",\"GitHubRepository\":\"https://github.com/router-for-me/CLIProxyAPI\",\"Logo\":\"https://example.invalid/example-management-api-c.png\",\"ConfigFields\":[]},\"capabilities\":{\"management_api\":true}}}");
 		return 0;
 	}
 	if (strcmp(method, "management.register") == 0) {
-		write_response(response, "{\"ok\":true,\"result\":{\"resources\":[{\"Path\":\"/status\",\"Menu\":\"Management API\",\"Description\":\"CPA exposes this menu resource under /v0/resource/plugins/example-management-api-c/status.\"}]}}");
+		write_response(response, "{\"ok\":true,\"result\":{\"routes\":[{\"Method\":\"GET\",\"Path\":\"/plugins/example-management-api-c/status\",\"Menu\":\"Management API\",\"Description\":\"Management API capability example.\"}]}}");
 		return 0;
 	}
 	if (strcmp(method, "management.handle") == 0) {
-		write_response(response, "{\"ok\":true,\"result\":{\"StatusCode\":200,\"Headers\":{\"content-type\":[\"text/html; charset=utf-8\"]},\"Body\":\"PCFkb2N0eXBlIGh0bWw+PHRpdGxlPk1hbmFnZW1lbnQgQVBJPC90aXRsZT48bWFpbj5NYW5hZ2VtZW50IEFQSSByZXNvdXJjZTwvbWFpbj4=\"}}");
+		write_response(response, "{\"ok\":true,\"result\":{\"StatusCode\":200,\"Headers\":{\"content-type\":[\"application/json\"]},\"Body\":\"eyJwbHVnaW4iOiJleGFtcGxlLW1hbmFnZW1lbnQtYXBpLWMifQ==\"}}");
 		return 0;
 	}
 	write_response(response, "{\"ok\":false,\"error\":{\"code\":\"unknown_method\",\"message\":\"unknown method\"}}");

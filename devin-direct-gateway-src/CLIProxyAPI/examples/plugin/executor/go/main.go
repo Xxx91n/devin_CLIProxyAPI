@@ -135,9 +135,9 @@ func handleMethod(method string) ([]byte, error) {
 	_ = time.Second
 	switch method {
 	case "plugin.register":
-		return okEnvelopeJSON("{\"schema_version\":1,\"metadata\":{\"Name\":\"example-executor-go\",\"Version\":\"0.1.0\",\"Author\":\"router-for-me\",\"GitHubRepository\":\"https://github.com/router-for-me/CLIProxyAPI\",\"Logo\":\"https://example.invalid/example-executor-go.png\",\"ConfigFields\":[]},\"capabilities\":{\"executor\":true,\"executor_model_scope\":\"both\",\"executor_input_formats\":[\"chat-completions\"],\"executor_output_formats\":[\"chat-completions\"]}}")
+		return okEnvelopeJSON("{\"schema_version\":6,\"metadata\":{\"Name\":\"example-executor-go\",\"Version\":\"0.1.0\",\"Author\":\"router-for-me\",\"GitHubRepository\":\"https://github.com/router-for-me/CLIProxyAPI\",\"Logo\":\"https://example.invalid/example-executor-go.png\",\"ConfigFields\":[]},\"capabilities\":{\"executor\":true,\"executor_model_scope\":\"both\",\"executor_input_formats\":[\"chat-completions\"],\"executor_output_formats\":[\"chat-completions\"]}}")
 	case "plugin.reconfigure":
-		return okEnvelopeJSON("{\"schema_version\":1,\"metadata\":{\"Name\":\"example-executor-go\",\"Version\":\"0.1.0\",\"Author\":\"router-for-me\",\"GitHubRepository\":\"https://github.com/router-for-me/CLIProxyAPI\",\"Logo\":\"https://example.invalid/example-executor-go.png\",\"ConfigFields\":[]},\"capabilities\":{\"executor\":true,\"executor_model_scope\":\"both\",\"executor_input_formats\":[\"chat-completions\"],\"executor_output_formats\":[\"chat-completions\"]}}")
+		return okEnvelopeJSON("{\"schema_version\":6,\"metadata\":{\"Name\":\"example-executor-go\",\"Version\":\"0.1.0\",\"Author\":\"router-for-me\",\"GitHubRepository\":\"https://github.com/router-for-me/CLIProxyAPI\",\"Logo\":\"https://example.invalid/example-executor-go.png\",\"ConfigFields\":[]},\"capabilities\":{\"executor\":true,\"executor_model_scope\":\"both\",\"executor_input_formats\":[\"chat-completions\"],\"executor_output_formats\":[\"chat-completions\"]}}")
 	case "executor.identifier":
 		return okEnvelopeJSON("{\"identifier\":\"example-executor-go\"}")
 	case "executor.execute":
@@ -162,14 +162,7 @@ func errorEnvelope(code, message string, httpStatus ...int) []byte {
 	if len(httpStatus) > 0 {
 		status = httpStatus[0]
 	}
-	raw, _ := json.Marshal(envelope{
-		OK: false,
-		Error: &envelopeError{
-			Code:       code,
-			Message:    message,
-			HTTPStatus: status,
-		},
-	})
+	raw, _ := json.Marshal(envelope{OK: false, Error: &envelopeError{Code: code, Message: message, HTTPStatus: status}})
 	return raw
 }
 

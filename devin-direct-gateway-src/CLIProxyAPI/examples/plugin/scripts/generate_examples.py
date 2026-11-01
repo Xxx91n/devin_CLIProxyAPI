@@ -8,7 +8,7 @@ from typing import NamedTuple
 
 ROOT = Path(__file__).resolve().parents[1]
 ABI_VERSION = 1
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 6
 
 
 class Capability(NamedTuple):
