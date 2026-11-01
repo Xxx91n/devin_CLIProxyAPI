@@ -6,6 +6,10 @@ on:
 permissions:
   contents: read
 
+defaults:
+  run:
+    working-directory: devin-direct-gateway-src/CLIProxyAPI
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -15,8 +19,9 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version-file: go.mod
+          go-version-file: devin-direct-gateway-src/CLIProxyAPI/go.mod
           cache: true
+          cache-dependency-path: devin-direct-gateway-src/CLIProxyAPI/go.sum
       - name: Refresh models catalog
         run: bash .github/scripts/refresh-model-catalogs.sh
       - name: Build

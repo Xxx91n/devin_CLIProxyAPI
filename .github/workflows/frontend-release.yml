@@ -1,16 +1,20 @@
-name: Build and Release
+name: frontend-release
 
 on:
   push:
     tags:
       - 'v*'
 
+permissions:
+  contents: write
+
+defaults:
+  run:
+    working-directory: devin-direct-gateway-src/Cli-Proxy-API-Management-Center
+
 jobs:
   build-and-release:
     runs-on: ubuntu-latest
-
-    permissions:
-      contents: write
 
     steps:
       - name: Checkout code
@@ -60,8 +64,8 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          files: dist/management.html
-          body_path: release-notes.md
+          files: devin-direct-gateway-src/Cli-Proxy-API-Management-Center/dist/management.html
+          body_path: devin-direct-gateway-src/Cli-Proxy-API-Management-Center/release-notes.md
           draft: false
           prerelease: false
         env:
