@@ -139,7 +139,7 @@ func handleMethod(method string) ([]byte, error) {
 	case "plugin.reconfigure":
 		return okEnvelopeJSON("{\"schema_version\":6,\"metadata\":{\"Name\":\"example-management-api-go\",\"Version\":\"0.1.0\",\"Author\":\"router-for-me\",\"GitHubRepository\":\"https://github.com/router-for-me/CLIProxyAPI\",\"Logo\":\"https://example.invalid/example-management-api-go.png\",\"ConfigFields\":[]},\"capabilities\":{\"management_api\":true}}")
 	case "management.register":
-		return okEnvelopeJSON("{\"routes\":[{\"Method\":\"GET\",\"Path\":\"/plugins/example-management-api-go/status\",\"Menu\":\"Management API\",\"Description\":\"Management API capability example.\"}]}")
+		return okEnvelopeJSON("{\"routes\":[{\"Method\":\"GET\",\"Path\":\"/plugins/example-management-api-go/status\",\"Description\":\"Management API capability example.\"}]}")
 	case "management.handle":
 		return okEnvelopeJSON("{\"StatusCode\":200,\"Headers\":{\"content-type\":[\"application/json\"]},\"Body\":\"eyJwbHVnaW4iOiJleGFtcGxlLW1hbmFnZW1lbnQtYXBpLWdvIn0=\"}")
 	default:

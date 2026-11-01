@@ -69,7 +69,7 @@ make -C examples/plugin build
 
 构建产物写入 `examples/plugin/bin`，命名格式为 `<example>-<go|c|rust>.<ext>`。扩展名跟随操作系统：macOS 为 `.dylib`，Linux 为 `.so`，Windows 为 `.dll`（见 `examples/plugin/Makefile` 的模式规则）。
 
-Makefile 只构建其 `EXAMPLES` 变量中列出的示例。四个仅 Go 的示例不在该列表中——`codex-service-tier`、`request-lifecycle`、`scheduler`、`frontend-auth-exclusive`——需按各自 README 用 `go build -buildmode=c-shared` 直接构建。
+Makefile 只构建其 `EXAMPLES` 变量中列出的示例。七个仅 Go 的示例不在该列表中——`codex-service-tier`、`request-lifecycle`、`scheduler`、`frontend-auth-exclusive`、`host-callback-auth-files`、`host-model-callback`、`claude-web-search-router`——需按各自 README 用 `go build -buildmode=c-shared` 直接构建。
 
 ## Codex Service Tier
 

@@ -139,7 +139,7 @@ func handleMethod(method string) ([]byte, error) {
 	case "plugin.reconfigure":
 		return okEnvelopeJSON("{\"schema_version\":6,\"metadata\":{\"Name\":\"example-host-callback-go\",\"Version\":\"0.1.0\",\"Author\":\"router-for-me\",\"GitHubRepository\":\"https://github.com/router-for-me/CLIProxyAPI\",\"Logo\":\"https://example.invalid/example-host-callback-go.png\",\"ConfigFields\":[]},\"capabilities\":{\"management_api\":true}}")
 	case "management.register":
-		return okEnvelopeJSON("{\"routes\":[{\"Method\":\"GET\",\"Path\":\"/plugins/example-host-callback-go/status\",\"Menu\":\"Host Callback\",\"Description\":\"Host callback example carried by a minimal Management API route.\"}]}")
+		return okEnvelopeJSON("{\"routes\":[{\"Method\":\"GET\",\"Path\":\"/plugins/example-host-callback-go/status\",\"Description\":\"Host callback example carried by a minimal Management API route.\"}]}")
 	case "management.handle":
 		callHost("host.log", []byte(`{"level":"info","message":"example-host-callback-go host callback log","fields":{"plugin":"example-host-callback-go"}}`))
 		callHost("host.http.do", []byte(`{"method":"GET","url":"https://example.com","headers":{"user-agent":["example-host-callback-go"]}}`))

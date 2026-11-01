@@ -27,7 +27,9 @@
 cd go
 go build -buildmode=c-shared -o host-callback-auth-files.dylib .
 rm -f host-callback-auth-files.h
-cp host-callback-auth-files.dylib ../../plugins/
+# 复制到配置的 plugins.dir。下面的路径对应服务端从 CLIProxyAPI 根目录启动时的
+# 默认 "plugins" 目录。
+cp host-callback-auth-files.dylib ../../../../plugins/
 ```
 
 按目标系统使用对应扩展名：macOS 用 `.dylib`，Linux 用 `.so`，Windows 用 `.dll`。

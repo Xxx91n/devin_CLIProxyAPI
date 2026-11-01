@@ -84,7 +84,7 @@ static int plugin_call(const char* method, const uint8_t* request, size_t reques
 		return 0;
 	}
 	if (strcmp(method, "management.register") == 0) {
-		write_response(response, "{\"ok\":true,\"result\":{\"routes\":[{\"Method\":\"GET\",\"Path\":\"/plugins/example-management-api-c/status\",\"Menu\":\"Management API\",\"Description\":\"Management API capability example.\"}]}}");
+		write_response(response, "{\"ok\":true,\"result\":{\"routes\":[{\"Method\":\"GET\",\"Path\":\"/plugins/example-management-api-c/status\",\"Description\":\"Management API capability example.\"}]}}");
 		return 0;
 	}
 	if (strcmp(method, "management.handle") == 0) {

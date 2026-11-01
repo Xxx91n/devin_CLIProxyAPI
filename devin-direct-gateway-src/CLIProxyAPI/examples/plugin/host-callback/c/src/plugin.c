@@ -84,7 +84,7 @@ static int plugin_call(const char* method, const uint8_t* request, size_t reques
 		return 0;
 	}
 	if (strcmp(method, "management.register") == 0) {
-		write_response(response, "{\"ok\":true,\"result\":{\"routes\":[{\"Method\":\"GET\",\"Path\":\"/plugins/example-host-callback-c/status\",\"Menu\":\"Host Callback\",\"Description\":\"Host callback example carried by a minimal Management API route.\"}]}}");
+		write_response(response, "{\"ok\":true,\"result\":{\"routes\":[{\"Method\":\"GET\",\"Path\":\"/plugins/example-host-callback-c/status\",\"Description\":\"Host callback example carried by a minimal Management API route.\"}]}}");
 		return 0;
 	}
 	if (strcmp(method, "management.handle") == 0) {

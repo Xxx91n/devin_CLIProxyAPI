@@ -27,7 +27,9 @@ From this directory:
 cd go
 go build -buildmode=c-shared -o host-model-callback.dylib .
 rm -f host-model-callback.h
-cp host-model-callback.dylib ../../plugins/
+# Copy into your configured plugins.dir. The path below targets the default
+# "plugins" directory when the server runs from the CLIProxyAPI root.
+cp host-model-callback.dylib ../../../../plugins/
 ```
 
 Use the extension your target system expects: `.dylib` on macOS, `.so` on Linux, `.dll` on Windows.

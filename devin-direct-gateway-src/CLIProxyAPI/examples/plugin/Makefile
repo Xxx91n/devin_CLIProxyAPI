@@ -1,4 +1,7 @@
-EXAMPLES := simple model auth frontend-auth executor protocol-format request-translator request-normalizer response-translator response-normalizer thinking usage cli management-api host-callback host-callback-auth-files host-model-callback claude-web-search-router
+EXAMPLES := simple model auth frontend-auth executor protocol-format request-translator request-normalizer response-translator response-normalizer thinking usage cli management-api host-callback
+# Go-only examples absent from EXAMPLES (no c/ or rust/ implementation): codex-service-tier,
+# request-lifecycle, scheduler, frontend-auth-exclusive, host-callback-auth-files,
+# host-model-callback, claude-web-search-router. Build them with go build -buildmode=c-shared.
 LANGUAGES := go c rust
 BIN_DIR := $(CURDIR)/bin
 BUILD_DIR := $(BIN_DIR)/build

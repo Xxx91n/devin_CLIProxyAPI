@@ -69,7 +69,7 @@ make -C examples/plugin build
 
 Artifacts land in `examples/plugin/bin` as `<example>-<go|c|rust>.<ext>`. The extension follows the OS: `.dylib` on macOS, `.so` on Linux, `.dll` on Windows (see the pattern rules in `examples/plugin/Makefile`).
 
-The Makefile builds the examples listed in its `EXAMPLES` variable. Four Go-only examples are absent from that list — `codex-service-tier`, `request-lifecycle`, `scheduler`, and `frontend-auth-exclusive` — and build directly with `go build -buildmode=c-shared` as described in their own READMEs.
+The Makefile builds the examples listed in its `EXAMPLES` variable. Seven Go-only examples are absent from that list — `codex-service-tier`, `request-lifecycle`, `scheduler`, `frontend-auth-exclusive`, `host-callback-auth-files`, `host-model-callback`, and `claude-web-search-router` — and build directly with `go build -buildmode=c-shared` as described in their own READMEs.
 
 ## Codex Service Tier
 
