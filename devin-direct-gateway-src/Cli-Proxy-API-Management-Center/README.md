@@ -71,6 +71,8 @@ remote-management:
   allow-remote: true
 ```
 
+The management key is sent as a Bearer credential on every request. Before enabling `allow-remote`, serve the panel behind TLS (HTTPS) and access it via `https://`; over plain HTTP the key is visible to anyone on the path between browser and server.
+
 The management key is `secret-key` under the same block (plaintext or bcrypt hashed). Check the CLI Proxy API server documentation for the full authentication rules and server-side limits.
 
 ## What you can manage (mapped to the UI pages)

@@ -53,7 +53,15 @@ go build -o cli-proxy-api ./cmd/server
 
 # Copy example config
 cp config.example.yaml config.yaml
+```
 
+Before starting the server, complete the copied `config.yaml`:
+
+1. Replace the `api-keys` placeholders (`your-api-key-1` … `your-api-key-3`, `config.example.yaml:40-42`) with real keys. With template values still present, example-key safe mode disables the proxy API endpoints and shuts the server down (`cmd/server/main.go:653-662`).
+2. Set `remote-management.secret-key` if you use the dashboard. Without it (and without the env fallback), no management secret exists and the Management API stays disabled (`internal/api/server.go:235`).
+3. Run `./cli-proxy-api -config config.yaml -devin-login` once to save the Devin OAuth credential into `auth-dir`; Devin requests fail without it.
+
+```bash
 # Run the proxy server
 ./cli-proxy-api -config config.yaml
 ```

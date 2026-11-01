@@ -71,6 +71,8 @@ remote-management:
   allow-remote: true
 ```
 
+管理密钥会作为 Bearer 凭据随每个请求发送。开启 `allow-remote` 之前，请让面板通过 TLS（HTTPS）对外提供，并用 `https://` 访问；明文 HTTP 下，密钥对浏览器与服务器路径上的任何人可见。
+
 管理密钥是同一配置块下的 `secret-key`（明文或 bcrypt 哈希）。完整鉴权规则与服务端限制请参考 CLI Proxy API 服务端文档。
 
 ## 功能一览（按页面对应）

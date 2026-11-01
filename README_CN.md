@@ -53,7 +53,15 @@ go build -o cli-proxy-api ./cmd/server
 
 # Copy example config
 cp config.example.yaml config.yaml
+```
 
+启动服务端之前，先补全复制出来的 `config.yaml`：
+
+1. 把 `api-keys` 的占位值（`your-api-key-1` … `your-api-key-3`，`config.example.yaml:40-42`）换成真实 key。占位值仍在时，示例 key 安全模式会禁用代理 API 端点并退出服务端（`cmd/server/main.go:653-662`）。
+2. 使用管理面板时设置 `remote-management.secret-key`。不设置（也没有环境变量兜底）时管理密钥缺失，Management API 不会启用（`internal/api/server.go:235`）。
+3. 执行一次 `./cli-proxy-api -config config.yaml -devin-login`，把 Devin OAuth 凭据保存到 `auth-dir`；没有该凭据 Devin 请求无法工作。
+
+```bash
 # Run the proxy server
 ./cli-proxy-api -config config.yaml
 ```
